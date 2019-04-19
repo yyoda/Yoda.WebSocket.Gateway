@@ -1,4 +1,5 @@
-﻿using Backend.Server.Formatters;
+﻿using System.Net;
+using Backend.Server.Formatters;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -10,6 +11,10 @@ namespace Backend.Server
     {
         public static void Main(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
+                .ConfigureKestrel((context, options) =>
+                {
+                    options.Listen(IPAddress.Loopback, 5001);
+                })
                 .ConfigureServices(services =>
                 {
                     services.AddMvc(options =>
