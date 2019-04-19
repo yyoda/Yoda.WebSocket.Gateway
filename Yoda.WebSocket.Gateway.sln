@@ -6,9 +6,6 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D2B66C40-D452-4937-A4E6-CE7AE56D4D88}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{A9DB9B29-7A19-476D-B0AA-A224094FBB5D}"
-	ProjectSection(SolutionItems) = preProject
-		test\client.html = test\client.html
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yoda.WebSocket.Gateway", "src\Yoda.WebSocket.Gateway\Yoda.WebSocket.Gateway.csproj", "{591E8867-495C-44C8-AD4D-3C00AD2FAB48}"
 EndProject
@@ -17,6 +14,16 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Backend.Server", "sample\Backend.Server\Backend.Server.csproj", "{EDEF6BC7-D7AA-477F-9A85-2AB50315F44F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yoda.WebSocket.Gateway.Core", "src\Yoda.WebSocket.Gateway.Core\Yoda.WebSocket.Gateway.Core.csproj", "{F266F826-49F5-4C3B-BD2D-578CF0B37202}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "stress_test", "stress_test", "{B68E7BF7-1712-4807-9484-2C8C9CD1F296}"
+	ProjectSection(SolutionItems) = preProject
+		test\stress_test\locustfile.py = test\stress_test\locustfile.py
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "browser_test", "browser_test", "{45A63DFB-CC95-4269-93AB-1068A537A311}"
+	ProjectSection(SolutionItems) = preProject
+		test\browser_test\client.html = test\browser_test\client.html
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,6 +51,8 @@ Global
 		{591E8867-495C-44C8-AD4D-3C00AD2FAB48} = {D2B66C40-D452-4937-A4E6-CE7AE56D4D88}
 		{EDEF6BC7-D7AA-477F-9A85-2AB50315F44F} = {1711626B-BF03-439D-96B5-0F56F97C20A9}
 		{F266F826-49F5-4C3B-BD2D-578CF0B37202} = {D2B66C40-D452-4937-A4E6-CE7AE56D4D88}
+		{B68E7BF7-1712-4807-9484-2C8C9CD1F296} = {A9DB9B29-7A19-476D-B0AA-A224094FBB5D}
+		{45A63DFB-CC95-4269-93AB-1068A537A311} = {A9DB9B29-7A19-476D-B0AA-A224094FBB5D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DD5CE05E-83E0-40B7-97DF-7B31B292D894}
