@@ -20,8 +20,6 @@ namespace Yoda.WebSocket.Gateway.Server
     {
         public static async Task Main(string[] args)
         {
-            var startedAt = DateTimeOffset.Now;
-
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddEnvironmentVariables()
