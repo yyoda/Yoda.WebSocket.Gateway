@@ -1,0 +1,51 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.156
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D2B66C40-D452-4937-A4E6-CE7AE56D4D88}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{A9DB9B29-7A19-476D-B0AA-A224094FBB5D}"
+	ProjectSection(SolutionItems) = preProject
+		test\client.html = test\client.html
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yoda.WebSocket.Gateway.Server", "src\Yoda.WebSocket.Gateway.Server\Yoda.WebSocket.Gateway.Server.csproj", "{00E28C96-910B-433A-8A1F-E43DE2B3404D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yoda.WebSocket.Gateway", "src\Yoda.WebSocket.Gateway\Yoda.WebSocket.Gateway.csproj", "{591E8867-495C-44C8-AD4D-3C00AD2FAB48}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{1711626B-BF03-439D-96B5-0F56F97C20A9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Backend.Server", "sample\Backend.Server\Backend.Server.csproj", "{EDEF6BC7-D7AA-477F-9A85-2AB50315F44F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{00E28C96-910B-433A-8A1F-E43DE2B3404D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00E28C96-910B-433A-8A1F-E43DE2B3404D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00E28C96-910B-433A-8A1F-E43DE2B3404D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00E28C96-910B-433A-8A1F-E43DE2B3404D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{591E8867-495C-44C8-AD4D-3C00AD2FAB48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{591E8867-495C-44C8-AD4D-3C00AD2FAB48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{591E8867-495C-44C8-AD4D-3C00AD2FAB48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{591E8867-495C-44C8-AD4D-3C00AD2FAB48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EDEF6BC7-D7AA-477F-9A85-2AB50315F44F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EDEF6BC7-D7AA-477F-9A85-2AB50315F44F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EDEF6BC7-D7AA-477F-9A85-2AB50315F44F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EDEF6BC7-D7AA-477F-9A85-2AB50315F44F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{00E28C96-910B-433A-8A1F-E43DE2B3404D} = {D2B66C40-D452-4937-A4E6-CE7AE56D4D88}
+		{591E8867-495C-44C8-AD4D-3C00AD2FAB48} = {D2B66C40-D452-4937-A4E6-CE7AE56D4D88}
+		{EDEF6BC7-D7AA-477F-9A85-2AB50315F44F} = {1711626B-BF03-439D-96B5-0F56F97C20A9}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DD5CE05E-83E0-40B7-97DF-7B31B292D894}
+	EndGlobalSection
+EndGlobal

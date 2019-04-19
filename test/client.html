@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>WebSocket Client</title>
+</head>
+<body>
+
+    <input type="text" id="connectionId">
+    <input type="button" id="connect" value="connect">
+    <input type="button" id="close" value="close">
+    <br/>
+    <input type="text" id="message" value="hello">
+    <input type="button" id="sendtxt" value="send as text">
+    <input type="button" id="sendbin" value="send as binary">
+    <br/>
+    <p id="status">
+
+    <script>
+        function string_to_buffer(src) {
+            var arr = new Uint16Array(
+                [].map.call(src, c => {
+                    return c.charCodeAt(0)
+                })
+            );
+
+            return arr.buffer;
+        }
+
+        function buffer_to_string(buf) {
+            return String.fromCharCode.apply("", new Uint16Array(buf))
+        }
+
+        var sock;
+        var status = document.getElementById('status');
+
+        document.addEventListener('DOMContentLoaded', e => {
+            document.getElementById('connect').addEventListener('click', e => {
+                var id = document.getElementById('connectionId').value;
+                sock = new WebSocket('ws://localhost:5000/ws/' + id);
+                sock.binaryType = "arraybuffer";
+                sock.addEventListener('open', e => {
+                    document.getElementById('status').innerText = "Connected.";
+                });
+                sock.addEventListener('message', e => {
+                    if (typeof e.data == "string") {
+                        document.getElementById('status').innerText = e.data;
+                    } else {
+                        document.getElementById('status').innerText = buffer_to_string(e.data);
+                    }
+                });
+            });
+
+            document.getElementById('close').addEventListener('click', e => {
+                sock.close();
+                document.getElementById('status').innerText = "Closed.";
+            });
+
+            document.getElementById('sendtxt').addEventListener('click', e => {
+                var data = document.getElementById('message').value;
+                sock.send(data);
+            });
+
+            document.getElementById('sendbin').addEventListener('click', e => {
+                var data = document.getElementById('message').value;
+                sock.send(string_to_buffer(data));
+            });
+        });
+    </script>
+</body>
+</html>
