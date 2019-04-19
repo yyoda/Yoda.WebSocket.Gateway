@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -19,14 +18,14 @@ namespace Yoda.WebSocket.Gateway
 {
     public class Program
     {
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddEnvironmentVariables()
                 .Build();
 
-            await WebHost.CreateDefaultBuilder(args)
+            WebHost.CreateDefaultBuilder(args)
                 .UseConfiguration(configuration)
                 .ConfigureServices(services =>
                 {
@@ -75,7 +74,7 @@ namespace Yoda.WebSocket.Gateway
                     });
                 })
                 .Build()
-                .RunAsync();
+                .Run();
         }
     }
 }
