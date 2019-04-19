@@ -13,8 +13,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using Yoda.WebSocket.Gateway.Core;
 
-namespace Yoda.WebSocket.Gateway.Server
+namespace Yoda.WebSocket.Gateway
 {
     public class Program
     {

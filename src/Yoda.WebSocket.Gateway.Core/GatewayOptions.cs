@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace Yoda.WebSocket.Gateway
+namespace Yoda.WebSocket.Gateway.Core
 {
     public class GatewayOptions : WebSocketOptions
     {

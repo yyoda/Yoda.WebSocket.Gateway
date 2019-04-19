@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace Yoda.WebSocket.Gateway
+namespace Yoda.WebSocket.Gateway.Core
 {
     public class GatewayMetrics
     {

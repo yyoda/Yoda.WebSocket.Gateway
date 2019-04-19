@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
-namespace Yoda.WebSocket.Gateway
+namespace Yoda.WebSocket.Gateway.Core
 {
     internal class GatewayMiddleware
     {

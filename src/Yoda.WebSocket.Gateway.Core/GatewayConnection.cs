@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace Yoda.WebSocket.Gateway
+namespace Yoda.WebSocket.Gateway.Core
 {
     public class GatewayConnection
     {

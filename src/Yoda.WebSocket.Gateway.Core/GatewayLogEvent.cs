@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace Yoda.WebSocket.Gateway
+namespace Yoda.WebSocket.Gateway.Core
 {
     public class GatewayLogEvent
     {
