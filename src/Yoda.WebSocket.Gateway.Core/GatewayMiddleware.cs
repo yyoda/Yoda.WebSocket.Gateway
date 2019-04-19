@@ -57,7 +57,21 @@ namespace Yoda.WebSocket.Gateway.Core
         private async Task HandleWebSocketRequestAsync(HttpContext context, CancellationToken cancellationToken)
         {
             var connectionId = context.Request.Path.Value.Replace($"{_options.WebSocketEndpoint}/", "");
-            var socket = await context.WebSockets.AcceptWebSocketAsync();
+            System.Net.WebSockets.WebSocket socket;
+
+            try
+            {
+                socket = await context.WebSockets.AcceptWebSocketAsync();
+            }
+            catch (Exception e)
+            {
+                const string errorMessage = "Websocket handshake error.";
+                _logger.LogDebug(GatewayLogEvent.WebSocketHandshakeError, e, errorMessage);
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsync(errorMessage, cancellationToken);
+                return;
+            }
+
             GatewayConnection.Instance.SetSocket(connectionId, socket);
 
             try
@@ -71,7 +85,19 @@ namespace Yoda.WebSocket.Gateway.Core
 
                     try
                     {
-                        current = await socket.ReceiveAsync(allocatedBuffer, cancellationToken);
+                        try
+                        {
+                            current = await socket.ReceiveAsync(allocatedBuffer, cancellationToken);
+                        }
+                        catch (WebSocketException e)
+                        {
+                            const string errorMessage = "Connection has been disabled.";
+                            _logger.LogDebug(GatewayLogEvent.WebSocketConnectionError, e, errorMessage);
+                            context.Response.StatusCode = 400;
+                            await context.Response.WriteAsync(errorMessage, cancellationToken);
+                            return;
+                        }
+
                         var buffer = allocatedBuffer.Slice(0, current.Count);
                         message.AddRange(buffer.ToArray());
 
@@ -90,12 +116,11 @@ namespace Yoda.WebSocket.Gateway.Core
                             {
                                 _logger.LogDebug(GatewayLogEvent.InvalidWebSocketMessageType, $"type: {type}");
                             }
-
-                            message.Clear();
                         }
                     }
                     finally
                     {
+                        message.Clear();
                         ArrayPool<byte>.Shared.Return(allocatedBuffer.ToArray());
                     }
 

@@ -34,20 +34,18 @@ namespace Yoda.WebSocket.Gateway
                 .ConfigureLogging((hostingContext, logging) =>
                 {
                     logging.AddConsole();
-
-                    if (hostingContext.HostingEnvironment.IsDevelopment())
-                    {
-                        logging.SetMinimumLevel(LogLevel.Debug);
-                    }
                 })
                 .Configure(app =>
                 {
+                    app.UseErrorHandler();
+
                     var options = new GatewayOptions
                     {
                         KeepAliveInterval = TimeSpan.FromMinutes(1),
                         ReceiveBufferSize = 6 * 1024,
                         LoggerFactory = app.ApplicationServices.GetService<ILoggerFactory>() ?? new NullLoggerFactory(),
                     };
+
                     app.UseWebSocketGateway(options);
 
                     app.UseRouter(router =>
@@ -64,12 +62,12 @@ namespace Yoda.WebSocket.Gateway
                                     NamingStrategy = new CamelCaseNamingStrategy()
                                 }
                             };
-                            var text = JsonConvert.SerializeObject(new GatewayMetrics
+                            var metrics = new GatewayMetrics
                             {
                                 MemoryCacheCount = memoryCache?.Count ?? 0,
                                 Options = options,
-                            }, settings);
-                            await response.WriteAsync(text);
+                            };
+                            await response.WriteAsync(JsonConvert.SerializeObject(metrics, settings));
                         });
                     });
                 })

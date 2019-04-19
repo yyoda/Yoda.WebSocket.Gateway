@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 
 namespace Backend.Server.Controllers
 {
@@ -40,7 +42,7 @@ namespace Backend.Server.Controllers
         {
             foreach (var connectionId in ConnectionIds)
             {
-                HttpClient.PostAsync($"cb/{connectionId}", content);
+                HttpClient.PostAsync($"cb/{connectionId}", content).ConfigureAwait(false);
             }
         }
     }
