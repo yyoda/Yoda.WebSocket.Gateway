@@ -13,9 +13,11 @@ namespace Yoda.WebSocket.Gateway.Core
 {
     public class GatewayOptions : WebSocketOptions
     {
+        public GatewayOptions(string forwardEndpoint) => ForwardEndpoint = forwardEndpoint;
+
         public string WebSocketEndpoint { get; set; } = "/ws";
         public string CallbackEndpoint { get; set; } = "/cb";
-        public string ForwardEndpoint { get; set; } = "http://localhost:63103/api/message";
+        public string ForwardEndpoint { get; }
 
         [IgnoreDataMember]
         internal Encoding Encoding { get; } = Encoding.UTF8;

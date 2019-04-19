@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -27,6 +28,10 @@ namespace Yoda.WebSocket.Gateway
 
             WebHost.CreateDefaultBuilder(args)
                 .UseConfiguration(configuration)
+                .ConfigureKestrel((context, options) =>
+                {
+                    options.Listen(IPAddress.Loopback, 5000);
+                })
                 .ConfigureServices(services =>
                 {
                     services.AddRouting();
@@ -39,7 +44,7 @@ namespace Yoda.WebSocket.Gateway
                 {
                     app.UseErrorHandler();
 
-                    var options = new GatewayOptions
+                    var options = new GatewayOptions("http://localhost:5001/api/message")
                     {
                         KeepAliveInterval = TimeSpan.FromMinutes(1),
                         ReceiveBufferSize = 6 * 1024,
