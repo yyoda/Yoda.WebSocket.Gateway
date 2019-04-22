@@ -77,17 +77,18 @@ namespace Yoda.WebSocket.Gateway.Core
             try
             {
                 ValueWebSocketReceiveResult current;
-                var message = new List<byte>(); //TODO: ArrayPoolを使いたい
+                var messageBuffer = new List<byte>();
 
                 do
                 {
-                    Memory<byte> allocatedBuffer = ArrayPool<byte>.Shared.Rent(_options.ReceiveBufferSize);
+                    var temporaryBuffer = ArrayPool<byte>.Shared.Rent(_options.ReceiveBufferSize);
+                    Memory<byte> temporaryMemory = temporaryBuffer;
 
                     try
                     {
                         try
                         {
-                            current = await socket.ReceiveAsync(allocatedBuffer, cancellationToken);
+                            current = await socket.ReceiveAsync(temporaryMemory, cancellationToken);
                         }
                         catch (WebSocketException e)
                         {
@@ -98,14 +99,14 @@ namespace Yoda.WebSocket.Gateway.Core
                             return;
                         }
 
-                        var buffer = allocatedBuffer.Slice(0, current.Count);
-                        message.AddRange(buffer.ToArray());
+                        var slicedBuffer = temporaryMemory.Slice(0, current.Count);
+                        messageBuffer.AddRange(slicedBuffer.ToArray());
 
                         if (current.EndOfMessage)
                         {
                             var type = current.MessageType.ToString().ToLower();
                             var uri = $"{_options.ForwardEndpoint}/{type}/{connectionId}";
-                            var content = _options.HttpContentGenerator(message.ToArray(), current.MessageType);
+                            var content = _options.HttpContentGenerator(messageBuffer.ToArray(), current.MessageType);
                             if (content != null)
                             {
                                 #pragma warning disable 4014
@@ -120,8 +121,8 @@ namespace Yoda.WebSocket.Gateway.Core
                     }
                     finally
                     {
-                        message.Clear();
-                        ArrayPool<byte>.Shared.Return(allocatedBuffer.ToArray());
+                        messageBuffer.Clear();
+                        ArrayPool<byte>.Shared.Return(temporaryBuffer);
                     }
 
                 } while (current.MessageType != WebSocketMessageType.Close);
@@ -173,12 +174,12 @@ namespace Yoda.WebSocket.Gateway.Core
             }
 
             var length32 = (int) length64;
-            Memory<byte> allocatedBuffer = ArrayPool<byte>.Shared.Rent(length32);
-            var buffer = allocatedBuffer.Slice(0, length32);
+            var allocatedBuffer = ArrayPool<byte>.Shared.Rent(length32);
+            var readBuffer = allocatedBuffer.AsMemory().Slice(0, length32);
 
             try
             {
-                await context.Request.Body.ReadAsync(buffer, cancellationToken);
+                await context.Request.Body.ReadAsync(readBuffer, cancellationToken);
                 var type = _options.UnicastMessageTypeSelector(context.Request);
 
                 try
@@ -186,7 +187,7 @@ namespace Yoda.WebSocket.Gateway.Core
                     // 送信データが指定サイズを超過している場合は分割して複数に分けて送信
                     if (length64 < _options.ReceiveBufferSize)
                     {
-                        var chunk = buffer.Slice(0, length32);
+                        var chunk = readBuffer.Slice(0, length32);
                         await socket.SendAsync(chunk, type, true, cancellationToken);
                     }
                     else
@@ -196,16 +197,16 @@ namespace Yoda.WebSocket.Gateway.Core
 
                         while (true)
                         {
-                            if (chunkIndex + chunkSize <= buffer.Length)
+                            if (chunkIndex + chunkSize <= readBuffer.Length)
                             {
-                                var chunk = buffer.Slice(chunkIndex, chunkSize);
+                                var chunk = readBuffer.Slice(chunkIndex, chunkSize);
                                 chunkIndex += chunkSize;
                                 await socket.SendAsync(chunk, type, false, cancellationToken);
                             }
                             else
                             {
-                                var finalSize = buffer.Length - chunkIndex;
-                                var chunk = buffer.Slice(chunkIndex, finalSize);
+                                var finalSize = readBuffer.Length - chunkIndex;
+                                var chunk = readBuffer.Slice(chunkIndex, finalSize);
                                 await socket.SendAsync(chunk, type, true, cancellationToken);
                                 break;
                             }
@@ -221,7 +222,7 @@ namespace Yoda.WebSocket.Gateway.Core
             }
             finally
             {
-                ArrayPool<byte>.Shared.Return(allocatedBuffer.ToArray());
+                ArrayPool<byte>.Shared.Return(allocatedBuffer);
             }
         }
     }
