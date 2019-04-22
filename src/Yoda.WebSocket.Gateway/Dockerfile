@@ -1,3 +1,5 @@
+ARG BUILD_CONFIGURATION=Release
+
 FROM mcr.microsoft.com/dotnet/core/aspnet:2.2-stretch-slim AS base
 WORKDIR /app
 EXPOSE 80 5000
@@ -9,10 +11,10 @@ COPY ["src/Yoda.WebSocket.Gateway.Core/Yoda.WebSocket.Gateway.Core.csproj", "src
 RUN dotnet restore "src/Yoda.WebSocket.Gateway/Yoda.WebSocket.Gateway.csproj"
 COPY . .
 WORKDIR "/src/src/Yoda.WebSocket.Gateway"
-RUN dotnet build "Yoda.WebSocket.Gateway.csproj" -c Release -o /app
+RUN dotnet build "Yoda.WebSocket.Gateway.csproj" -c ${BUILD_CONFIGURATION} -o /app
 
 FROM build AS publish
-RUN dotnet publish "Yoda.WebSocket.Gateway.csproj" -c Release -o /app
+RUN dotnet publish "Yoda.WebSocket.Gateway.csproj" -c ${BUILD_CONFIGURATION} -o /app
 
 FROM base AS final
 WORKDIR /app

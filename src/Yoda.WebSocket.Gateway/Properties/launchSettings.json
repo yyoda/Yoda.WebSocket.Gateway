@@ -3,14 +3,11 @@
     "Yoda.WebSocket.Gateway": {
       "commandName": "Project",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://*:5010/",
+        "FORWARD_ENDPOINT": "http://localhost:5020/api/message"
       },
-      "applicationUrl": "http://localhost:5000/"
-    },
-    "Docker": {
-      "commandName": "Docker",
-      "launchBrowser": false,
-      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}"
+      "applicationUrl": "http://localhost:5010/"
     }
   }
 }

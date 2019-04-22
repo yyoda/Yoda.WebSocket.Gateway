@@ -134,7 +134,7 @@ namespace Yoda.WebSocket.Gateway.Core
                     if (!response.IsSuccessStatusCode)
                     {
                         var body = await response.Content.ReadAsStringAsync();
-                        _logger.LogError(GatewayLogEvent.ApplicationEndpointError, $"uri: {requestUri}, status: {response.StatusCode}, body: {body}");
+                        _logger.LogError(GatewayLogEvent.HttpRequestError, $"uri: {requestUri}, status: {response.StatusCode}, body: {body}");
                     }
                 }
 

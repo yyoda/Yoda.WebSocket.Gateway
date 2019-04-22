@@ -1,0 +1,27 @@
+version: '3.4'
+
+services:
+  yoda.websocket.gateway:
+    image: ${DOCKER_REGISTRY-}yodawebsocketgateway
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://*:5110/
+      - FORWARD_ENDPOINT=http://host.docker.internal:5120/api/message
+    ports:
+      - "5110:5110"
+    build:
+      context: .
+      dockerfile: src/Yoda.WebSocket.Gateway/Dockerfile
+
+  backend.server:
+    image: ${DOCKER_REGISTRY-}backendserver
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://*:5120/
+      - GATEWAY_ENDPOINT=http://host.docker.internal:5110
+    ports:
+      - "5120:5120"
+    build:
+      context: .
+      dockerfile: sample/Backend.Server/Dockerfile
+

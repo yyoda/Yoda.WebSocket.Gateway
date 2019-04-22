@@ -1,12 +1,9 @@
 ﻿using System;
-using System.IO;
-using System.Net;
-using Microsoft.AspNetCore;
+using System.IO;using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -28,7 +25,6 @@ namespace Yoda.WebSocket.Gateway
 
             WebHost.CreateDefaultBuilder(args)
                 .UseConfiguration(configuration)
-                .UseUrls("http://*:5000/")
                 .ConfigureServices(services =>
                 {
                     services.AddRouting();
@@ -41,7 +37,10 @@ namespace Yoda.WebSocket.Gateway
                 {
                     app.UseErrorHandler();
 
-                    var options = new GatewayOptions("http://localhost:5001/api/message")
+                    var forwardEndpoint = configuration["FORWARD_ENDPOINT"] ??
+                                          throw new InvalidOperationException("FORWARD_ENDPOINT does not exist.");
+
+                    var options = new GatewayOptions(forwardEndpoint)
                     {
                         KeepAliveInterval = TimeSpan.FromMinutes(1),
                         ReceiveBufferSize = 6 * 1024,
@@ -52,22 +51,21 @@ namespace Yoda.WebSocket.Gateway
 
                     app.UseRouter(router =>
                     {
+                        var settings = new JsonSerializerSettings
+                        {
+                            ContractResolver = new DefaultContractResolver { NamingStrategy = new CamelCaseNamingStrategy() }
+                        };
+
                         router.MapGet("/status", async (request, response, route) =>
                         {
-                            response.StatusCode = 200;
                             response.ContentType = "application/json";
-                            var settings = new JsonSerializerSettings
-                            {
-                                ContractResolver = new DefaultContractResolver
-                                {
-                                    NamingStrategy = new CamelCaseNamingStrategy()
-                                }
-                            };
-                            var metrics = new GatewayMetrics
-                            {
-                                Options = options,
-                            };
-                            await response.WriteAsync(JsonConvert.SerializeObject(metrics, settings));
+                            await response.WriteAsync(JsonConvert.SerializeObject(new GatewayMetrics { Options = options, }, settings));
+                        });
+
+                        router.MapGet("/env", async (request, response, route) =>
+                        {
+                            response.ContentType = "application/json";
+                            await response.WriteAsync(JsonConvert.SerializeObject(configuration.AsEnumerable(), settings));
                         });
                     });
                 })

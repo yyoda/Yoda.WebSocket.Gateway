@@ -17,6 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yoda.WebSocket.Gateway.Core
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "stress_test", "stress_test", "{B68E7BF7-1712-4807-9484-2C8C9CD1F296}"
 	ProjectSection(SolutionItems) = preProject
+		test\stress_test\Dockerfile = test\stress_test\Dockerfile
 		test\stress_test\locustfile.py = test\stress_test\locustfile.py
 	EndProjectSection
 EndProject
@@ -27,9 +28,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "browser_test", "browser_tes
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B5952FBD-CF1A-430E-A147-0F755F758583}"
 	ProjectSection(SolutionItems) = preProject
-		.gitignore = .gitignore
 		README.md = README.md
 	EndProjectSection
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{7E7CCBBE-8516-4D43-9E18-3BAEB51DF476}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,6 +51,10 @@ Global
 		{F266F826-49F5-4C3B-BD2D-578CF0B37202}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F266F826-49F5-4C3B-BD2D-578CF0B37202}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F266F826-49F5-4C3B-BD2D-578CF0B37202}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E7CCBBE-8516-4D43-9E18-3BAEB51DF476}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E7CCBBE-8516-4D43-9E18-3BAEB51DF476}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E7CCBBE-8516-4D43-9E18-3BAEB51DF476}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E7CCBBE-8516-4D43-9E18-3BAEB51DF476}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -3,14 +3,11 @@
     "Backend.Server": {
       "commandName": "Project",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://*:5020/",
+        "GATEWAY_ENDPOINT": "http://localhost:5010"
       },
-      "applicationUrl": "http://localhost:5001"
-    },
-    "Docker": {
-      "commandName": "Docker",
-      "launchBrowser": false,
-      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}"
+      "applicationUrl": "http://localhost:5020"
     }
   }
 }

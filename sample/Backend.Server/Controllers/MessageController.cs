@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System;
 using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Headers;
+using System.Linq;
 using Yoda.WebSocket.Gateway.Core;
 
 namespace Backend.Server.Controllers
@@ -11,19 +9,16 @@ namespace Backend.Server.Controllers
     [Route("api/message")]
     public class MessageController : ControllerBase
     {
-        private static readonly HttpClient HttpClient = new HttpClient
-        {
-            BaseAddress = new Uri("http://localhost:5000")
-        };
+        private readonly IGatewayClient _client;
         private static readonly HashSet<string> ConnectionIds = new HashSet<string>();
+
+        public MessageController(IGatewayClient client) => _client = client;
 
         [HttpPost("text/{id}")]
         public IActionResult PostText(string id, [FromBody] string message)
         {
             ConnectionIds.Add(id);
-            var content = new StringContent(message);
-            content.Headers.ContentType = MediaTypeHeaderValue.Parse("text/plain");
-            Broadcast(content);
+            _client.BroadcastMessage(ConnectionIds.ToArray(), message);
             return Ok();
         }
 
@@ -31,18 +26,8 @@ namespace Backend.Server.Controllers
         public IActionResult PostBinary(string id, [FromBody] byte[] message)
         {
             ConnectionIds.Add(id);
-            var content = new ByteArrayContent(message);
-            content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
-            Broadcast(content);
+            _client.BroadcastMessage(ConnectionIds.ToArray(), message);
             return Ok();
-        }
-
-        private static void Broadcast(HttpContent content)
-        {
-            foreach (var connectionId in ConnectionIds)
-            {
-                HttpClient.PostAsync($"cb/{connectionId}", content).ConfigureAwait(false);
-            }
         }
     }
 }
