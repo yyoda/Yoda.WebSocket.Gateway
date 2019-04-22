@@ -36,7 +36,7 @@ namespace Yoda.WebSocket.Gateway
 
                 args.Exception.Handle(e =>
                 {
-                    logger.LogError(GatewayLogEvent.UnobservedTaskError, "Unobserved error in TaskScheduler", e);
+                    logger.LogError(GatewayLogEvent.UnobservedTaskError, e, "Unobserved error in TaskScheduler");
                     return true;
                 });
             };

@@ -28,10 +28,7 @@ namespace Yoda.WebSocket.Gateway
 
             WebHost.CreateDefaultBuilder(args)
                 .UseConfiguration(configuration)
-                .ConfigureKestrel((context, options) =>
-                {
-                    options.Listen(IPAddress.Loopback, 5000);
-                })
+                .UseUrls("http://*:5000/")
                 .ConfigureServices(services =>
                 {
                     services.AddRouting();

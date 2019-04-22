@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Threading.Tasks;
+using Yoda.WebSocket.Gateway.Core;
 
 namespace Backend.Server.Controllers
 {
@@ -12,7 +11,7 @@ namespace Backend.Server.Controllers
     [Route("api/message")]
     public class MessageController : ControllerBase
     {
-        private static readonly HttpClient HttpClient = new HttpClient()
+        private static readonly HttpClient HttpClient = new HttpClient
         {
             BaseAddress = new Uri("http://localhost:5000")
         };

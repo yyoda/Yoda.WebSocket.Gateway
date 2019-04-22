@@ -148,6 +148,12 @@ namespace Yoda.WebSocket.Gateway.Core
         private async Task HandleCallbackRequestAsync(HttpContext context, CancellationToken cancellationToken)
         {
             var connectionId = context.Request.Path.Value.Replace($"{_options.CallbackEndpoint}/", "");
+            if (string.IsNullOrWhiteSpace(connectionId))
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsync("ConnectionId does not exist.", cancellationToken);
+                return;
+            }
 
             var socket = GatewayConnection.Instance.GetSocket(connectionId);
             if (socket == null)
