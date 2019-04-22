@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net.Http;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -44,8 +45,9 @@ namespace Yoda.WebSocket.Gateway
                 })
                 .Configure(app =>
                 {
-                    app.UseErrorHandler();
+                    var env = app.ApplicationServices.GetService<IHostingEnvironment>();
 
+                    app.UseErrorHandler();
 
                     var options = new GatewayOptions
                     {
@@ -62,17 +64,30 @@ namespace Yoda.WebSocket.Gateway
                             ContractResolver = new DefaultContractResolver { NamingStrategy = new CamelCaseNamingStrategy() }
                         };
 
-                        router.MapGet("/status", async (request, response, route) =>
+                        async Task Authenticate(HttpContext context, Func<HttpContext, Task> callback)
                         {
-                            response.ContentType = "application/json";
-                            await response.WriteAsync(JsonConvert.SerializeObject(new GatewayMetrics { Options = options, }, settings));
-                        });
+                            if (!env.IsProduction() || context.Request.Headers.ContainsKey("X-Forwarded-For"))
+                            {
+                                await callback(context);
+                            }
+                            else
+                            {
+                                context.Response.StatusCode = 401;
+                                await context.Response.WriteAsync("Access Denied.");
+                            }
+                        }
 
-                        router.MapGet("/env", async (request, response, route) =>
+                        router.MapGet("/status", context => Authenticate(context, current =>
                         {
-                            response.ContentType = "application/json";
-                            await response.WriteAsync(JsonConvert.SerializeObject(configuration.AsEnumerable(), settings));
-                        });
+                            current.Response.ContentType = "application/json";
+                            return current.Response.WriteAsync(JsonConvert.SerializeObject(new GatewayMetrics {Options = options,}, settings));
+                        }));
+
+                        router.MapGet("/env", context => Authenticate(context, current =>
+                        {
+                            current.Response.ContentType = "application/json";
+                            return current.Response.WriteAsync(JsonConvert.SerializeObject(configuration.AsEnumerable(), settings));
+                        }));
                     });
                 })
                 .Build()
