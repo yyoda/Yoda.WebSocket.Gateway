@@ -56,7 +56,6 @@ namespace Yoda.WebSocket.Gateway
                         {
                             response.StatusCode = 200;
                             response.ContentType = "application/json";
-                            var memoryCache = app.ApplicationServices.GetService<IMemoryCache>() as MemoryCache;
                             var settings = new JsonSerializerSettings
                             {
                                 ContractResolver = new DefaultContractResolver
@@ -66,7 +65,6 @@ namespace Yoda.WebSocket.Gateway
                             };
                             var metrics = new GatewayMetrics
                             {
-                                MemoryCacheCount = memoryCache?.Count ?? 0,
                                 Options = options,
                             };
                             await response.WriteAsync(JsonConvert.SerializeObject(metrics, settings));

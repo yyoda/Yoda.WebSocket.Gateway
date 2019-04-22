@@ -18,7 +18,6 @@ namespace Yoda.WebSocket.Gateway.Core
         public int ProcessorCount => Processor;
         public ThreadMetrics Threads { get; }
         public int WebSocketConnectionCount { get; }
-        public int MemoryCacheCount { get; set; }
         public GatewayOptions Options { get; set; }
 
         public class ThreadMetrics
