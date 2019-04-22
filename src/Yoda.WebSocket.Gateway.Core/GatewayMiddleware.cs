@@ -15,15 +15,15 @@ namespace Yoda.WebSocket.Gateway.Core
     {
         private readonly RequestDelegate _next;
         private readonly GatewayOptions _options;
-        private readonly ILogger _logger;
         private readonly HttpClient _http;
+        private readonly ILogger _logger;
 
-        public GatewayMiddleware(RequestDelegate next, GatewayOptions options)
+        public GatewayMiddleware(RequestDelegate next, GatewayOptions options, IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory)
         {
             _next = next ?? throw new ArgumentNullException(nameof(next));
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            _logger = _options.LoggerFactory.CreateLogger(nameof(GatewayMiddleware));
-            _http = new HttpClient(_options.HttpMessageHandler);
+            _http = httpClientFactory.CreateClient("default");
+            _logger = loggerFactory.CreateLogger(nameof(GatewayMiddleware));
         }
 
         public async Task Invoke(HttpContext context)
@@ -105,12 +105,11 @@ namespace Yoda.WebSocket.Gateway.Core
                         if (current.EndOfMessage)
                         {
                             var type = current.MessageType.ToString().ToLower();
-                            var uri = $"{_options.ForwardEndpoint}/{type}/{connectionId}";
                             var content = _options.HttpContentGenerator(messageBuffer.ToArray(), current.MessageType);
                             if (content != null)
                             {
                                 #pragma warning disable 4014
-                                ForwardMessageAsync(uri, content, cancellationToken).ConfigureAwait(false);
+                                ForwardMessageAsync($"{type}/{connectionId}", content, cancellationToken).ConfigureAwait(false);
                                 #pragma warning restore 4014
                             }
                             else

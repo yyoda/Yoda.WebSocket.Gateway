@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -13,14 +11,8 @@ namespace Yoda.WebSocket.Gateway.Core
 {
     public class GatewayOptions : WebSocketOptions
     {
-        public GatewayOptions(string forwardEndpoint) => ForwardEndpoint = forwardEndpoint;
-
         public string WebSocketEndpoint { get; set; } = "/ws";
         public string CallbackEndpoint { get; set; } = "/cb";
-        public string ForwardEndpoint { get; }
-
-        [IgnoreDataMember]
-        internal Encoding Encoding { get; } = Encoding.UTF8;
 
         [IgnoreDataMember]
         public Func<HttpRequest, WebSocketMessageType> UnicastMessageTypeSelector { get; set; } = request =>
@@ -49,11 +41,5 @@ namespace Yoda.WebSocket.Gateway.Core
                     return null;
             }
         };
-
-        [IgnoreDataMember]
-        public ILoggerFactory LoggerFactory { get; set; } = new NullLoggerFactory();
-
-        [IgnoreDataMember]
-        public HttpMessageHandler HttpMessageHandler { get; set; } = new SocketsHttpHandler();
     }
 }

@@ -1,5 +1,7 @@
 ﻿using System;
-using System.IO;using Microsoft.AspNetCore;
+using System.IO;
+using System.Net.Http;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -7,7 +9,6 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Yoda.WebSocket.Gateway.Core;
@@ -25,11 +26,19 @@ namespace Yoda.WebSocket.Gateway
 
             WebHost.CreateDefaultBuilder(args)
                 .UseConfiguration(configuration)
-                .ConfigureServices(services =>
+                .ConfigureServices((context, services) =>
                 {
+                    var endpoint = configuration["FORWARD_ENDPOINT"] ??
+                                          throw new InvalidOperationException("FORWARD_ENDPOINT does not exist.");
+
+                    services.AddHttpClient("default")
+                        .ConfigureHttpClient(client => client.BaseAddress = new Uri(endpoint))
+                        .ConfigurePrimaryHttpMessageHandler<SocketsHttpHandler>()
+                        .SetHandlerLifetime(TimeSpan.FromMinutes(5));
+
                     services.AddRouting();
                 })
-                .ConfigureLogging((hostingContext, logging) =>
+                .ConfigureLogging((context, logging) =>
                 {
                     logging.AddConsole();
                 })
@@ -37,14 +46,11 @@ namespace Yoda.WebSocket.Gateway
                 {
                     app.UseErrorHandler();
 
-                    var forwardEndpoint = configuration["FORWARD_ENDPOINT"] ??
-                                          throw new InvalidOperationException("FORWARD_ENDPOINT does not exist.");
 
-                    var options = new GatewayOptions(forwardEndpoint)
+                    var options = new GatewayOptions
                     {
                         KeepAliveInterval = TimeSpan.FromMinutes(1),
                         ReceiveBufferSize = 6 * 1024,
-                        LoggerFactory = app.ApplicationServices.GetService<ILoggerFactory>() ?? new NullLoggerFactory(),
                     };
 
                     app.UseWebSocketGateway(options);

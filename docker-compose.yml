@@ -6,7 +6,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://*:5110/
-      - FORWARD_ENDPOINT=http://host.docker.internal:5120/api/message
+      - FORWARD_ENDPOINT=http://host.docker.internal:5120/api/message/
     ports:
       - "5110:5110"
     build:
@@ -18,7 +18,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://*:5120/
-      - GATEWAY_ENDPOINT=http://host.docker.internal:5110
+      - GATEWAY_ENDPOINT=http://host.docker.internal:5110/
     ports:
       - "5120:5120"
     build:
