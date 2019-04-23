@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Collections.Concurrent;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
 using Yoda.WebSocket.Gateway.Core;
@@ -10,23 +11,25 @@ namespace Backend.Server.Controllers
     public class MessageController : ControllerBase
     {
         private readonly IGatewayClient _client;
-        private static readonly HashSet<string> ConnectionIds = new HashSet<string>();
+        private static readonly IDictionary<string, GatewayClientConnection> Connections = new ConcurrentDictionary<string, GatewayClientConnection>();
 
         public MessageController(IGatewayClient client) => _client = client;
 
-        [HttpPost("text/{id}")]
-        public IActionResult PostText(string id, [FromBody] string message)
+        [HttpPost("text")]
+        public IActionResult BroadcastText([FromBody] string message)
         {
-            ConnectionIds.Add(id);
-            _client.BroadcastMessage(ConnectionIds.ToArray(), message);
+            var connection = base.Request.GetGatewayConnection();
+            Connections[connection.Id] = connection;
+            _client.BroadcastMessage(Connections.Values.ToArray(), message);
             return Ok();
         }
 
-        [HttpPost("binary/{id}")]
-        public IActionResult PostBinary(string id, [FromBody] byte[] message)
+        [HttpPost("binary")]
+        public IActionResult BroadcastBinary([FromBody] byte[] message)
         {
-            ConnectionIds.Add(id);
-            _client.BroadcastMessage(ConnectionIds.ToArray(), message);
+            var connection = base.Request.GetGatewayConnection();
+            Connections[connection.Id] = connection;
+            _client.BroadcastMessage(Connections.Values.ToArray(), message);
             return Ok();
         }
     }

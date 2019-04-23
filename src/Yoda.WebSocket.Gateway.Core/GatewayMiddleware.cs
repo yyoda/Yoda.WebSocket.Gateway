@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Yoda.WebSocket.Gateway.Core
@@ -22,8 +23,8 @@ namespace Yoda.WebSocket.Gateway.Core
         {
             _next = next ?? throw new ArgumentNullException(nameof(next));
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            _http = httpClientFactory.CreateClient("default");
-            _logger = loggerFactory.CreateLogger(nameof(GatewayMiddleware));
+            _http = httpClientFactory?.CreateClient("default") ?? new HttpClient();
+            _logger = loggerFactory?.CreateLogger(nameof(GatewayMiddleware)) ?? NullLogger.Instance;
         }
 
         public async Task Invoke(HttpContext context)
@@ -99,22 +100,27 @@ namespace Yoda.WebSocket.Gateway.Core
                             return;
                         }
 
-                        var slicedBuffer = temporaryMemory.Slice(0, current.Count);
-                        messageBuffer.AddRange(slicedBuffer.ToArray());
+                        var slicedTemporaryMemory = temporaryMemory.Slice(0, current.Count);
+                        messageBuffer.AddRange(slicedTemporaryMemory.ToArray());
 
                         if (current.EndOfMessage)
                         {
-                            var type = current.MessageType.ToString().ToLower();
                             var content = _options.HttpContentGenerator(messageBuffer.ToArray(), current.MessageType);
                             if (content != null)
                             {
+                                var requestUri = current.MessageType.ToString().ToLower();
+                                var remoteHost = _options.GatewayUrl;
+                                var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
+                                request.SetGatewayConnectionHeader(remoteHost, connectionId);
+                                request.Content = content;
+
                                 #pragma warning disable 4014
-                                ForwardMessageAsync($"{type}/{connectionId}", content, cancellationToken).ConfigureAwait(false);
+                                ForwardMessageAsync(request, cancellationToken).ConfigureAwait(false);
                                 #pragma warning restore 4014
                             }
                             else
                             {
-                                _logger.LogDebug(GatewayLogEvent.InvalidWebSocketMessageType, $"type: {type}");
+                                _logger.LogDebug(GatewayLogEvent.InvalidWebSocketMessageType, $"type: {current.MessageType}");
                             }
                         }
                     }
@@ -126,14 +132,14 @@ namespace Yoda.WebSocket.Gateway.Core
 
                 } while (current.MessageType != WebSocketMessageType.Close);
 
-                async Task ForwardMessageAsync(string requestUri, HttpContent content, CancellationToken ct)
+                async Task ForwardMessageAsync(HttpRequestMessage request, CancellationToken ct)
                 {
-                    var response = await _http.PostAsync(requestUri, content, ct);
+                    var response = await _http.SendAsync(request, ct);
 
                     if (!response.IsSuccessStatusCode)
                     {
                         var body = await response.Content.ReadAsStringAsync();
-                        _logger.LogError(GatewayLogEvent.HttpRequestError, $"uri: {requestUri}, status: {response.StatusCode}, body: {body}");
+                        _logger.LogError(GatewayLogEvent.HttpRequestError, $"uri: {request.RequestUri}, status: {response.StatusCode}, body: {body}");
                     }
                 }
 
@@ -151,7 +157,7 @@ namespace Yoda.WebSocket.Gateway.Core
             if (string.IsNullOrWhiteSpace(connectionId))
             {
                 context.Response.StatusCode = 400;
-                await context.Response.WriteAsync("ConnectionId does not exist.", cancellationToken);
+                await context.Response.WriteAsync("Id does not exist.", cancellationToken);
                 return;
             }
 

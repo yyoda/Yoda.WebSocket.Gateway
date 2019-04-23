@@ -29,11 +29,11 @@ namespace Yoda.WebSocket.Gateway
                 .UseConfiguration(configuration)
                 .ConfigureServices((context, services) =>
                 {
-                    var endpoint = configuration["FORWARD_ENDPOINT"] ??
-                                          throw new InvalidOperationException("FORWARD_ENDPOINT does not exist.");
+                    var forwardUrl = configuration["FORWARD_URL"] ??
+                                     throw new InvalidOperationException("FORWARD_URL does not exist.");
 
                     services.AddHttpClient("default")
-                        .ConfigureHttpClient(client => client.BaseAddress = new Uri(endpoint))
+                        .ConfigureHttpClient(client => client.BaseAddress = new Uri(forwardUrl))
                         .ConfigurePrimaryHttpMessageHandler<SocketsHttpHandler>()
                         .SetHandlerLifetime(TimeSpan.FromMinutes(5));
 
@@ -49,7 +49,10 @@ namespace Yoda.WebSocket.Gateway
 
                     app.UseErrorHandler();
 
-                    var options = new GatewayOptions
+                    var gatewayUrl = configuration["GATEWAY_URL"] ??
+                                     throw new InvalidOperationException("GATEWAY_URL does not exist.");
+
+                    var options = new GatewayOptions(gatewayUrl)
                     {
                         KeepAliveInterval = TimeSpan.FromMinutes(1),
                         ReceiveBufferSize = 6 * 1024,
@@ -80,7 +83,7 @@ namespace Yoda.WebSocket.Gateway
                         router.MapGet("/status", context => Authenticate(context, current =>
                         {
                             current.Response.ContentType = "application/json";
-                            return current.Response.WriteAsync(JsonConvert.SerializeObject(new GatewayMetrics {Options = options,}, settings));
+                            return current.Response.WriteAsync(JsonConvert.SerializeObject(new GatewayMetrics {Options = options}, settings));
                         }));
 
                         router.MapGet("/env", context => Authenticate(context, current =>

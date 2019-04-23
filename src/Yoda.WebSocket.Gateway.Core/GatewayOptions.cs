@@ -11,8 +11,11 @@ namespace Yoda.WebSocket.Gateway.Core
 {
     public class GatewayOptions : WebSocketOptions
     {
+        public GatewayOptions(string gatewayUrl) => GatewayUrl = gatewayUrl;
+
         public string WebSocketEndpoint { get; set; } = "/ws";
         public string CallbackEndpoint { get; set; } = "/cb";
+        public string GatewayUrl { get; }
 
         [IgnoreDataMember]
         public Func<HttpRequest, WebSocketMessageType> UnicastMessageTypeSelector { get; set; } = request =>

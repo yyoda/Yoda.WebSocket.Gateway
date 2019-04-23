@@ -24,11 +24,7 @@ namespace Backend.Server
                 .UseConfiguration(configuration)
                 .ConfigureServices(services =>
                 {
-                    var gatewayUri = configuration["GATEWAY_ENDPOINT"] ??
-                                     throw new InvalidOperationException("GATEWAY_ENDPOINT does not exist.");
-
                     services.AddHttpClient<IGatewayClient, GatewayClient>()
-                        .ConfigureHttpClient(client => client.BaseAddress = new Uri(gatewayUri))
                         .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler())
                         .SetHandlerLifetime(TimeSpan.FromMinutes(5));
 

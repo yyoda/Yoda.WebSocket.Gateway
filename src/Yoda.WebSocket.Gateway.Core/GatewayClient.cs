@@ -7,8 +7,8 @@ namespace Yoda.WebSocket.Gateway.Core
 {
     public interface IGatewayClient
     {
-        void BroadcastMessage(string[] connectionIds, string message);
-        void BroadcastMessage(string[] connectionIds, byte[] message);
+        void BroadcastMessage(GatewayClientConnection[] connections, string message);
+        void BroadcastMessage(GatewayClientConnection[] connections, byte[] message);
     }
 
     public class GatewayClient : IGatewayClient
@@ -22,37 +22,51 @@ namespace Yoda.WebSocket.Gateway.Core
             Logger = loggerFactory.CreateLogger<GatewayClient>();
         }
 
-        public void BroadcastMessage(string[] connectionIds, string message)
+        public void BroadcastMessage(GatewayClientConnection[] connections, string message)
         {
             var content = new StringContent(message);
             content.Headers.ContentType = MediaTypeHeaderValue.Parse("text/plain");
 
-            foreach (var connectionId in connectionIds)
+            foreach (var connectionId in connections)
             {
                 RequestAsync(connectionId, content).ConfigureAwait(false);
             }
         }
 
-        public void BroadcastMessage(string[] connectionIds, byte[] message)
+        public void BroadcastMessage(GatewayClientConnection[] connections, byte[] message)
         {
             var content = new ByteArrayContent(message);
             content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
 
-            foreach (var connectionId in connectionIds)
+            foreach (var connectionId in connections)
             {
                 RequestAsync(connectionId, content).ConfigureAwait(false);
             }
         }
 
-        private async Task RequestAsync(string connectionId, HttpContent content)
+        private async Task RequestAsync(GatewayClientConnection connection, HttpContent content)
         {
-            var response = await Client.PostAsync($"cb/{connectionId}", content);
+            var response = await Client.PostAsync($"{connection.RemoteHost}cb/{connection.Id}", content);
 
             if (!response.IsSuccessStatusCode)
             {
                 var body = await response.Content.ReadAsStringAsync();
-                Logger.LogError(GatewayLogEvent.HttpRequestError, $"status: {response.StatusCode}, id: {connectionId}, content: {body}");
+                Logger.LogError(GatewayLogEvent.HttpRequestError, $"status: {response.StatusCode}, connection: {connection}, content: {body}");
             }
         }
+    }
+
+    public class GatewayClientConnection
+    {
+        public GatewayClientConnection(string remoteHost, string id)
+        {
+            RemoteHost = remoteHost;
+            Id = id;
+        }
+
+        public string RemoteHost { get; }
+        public string Id { get; }
+
+        public override string ToString() => $"remoteHost: {RemoteHost}, id: {Id}";
     }
 }
