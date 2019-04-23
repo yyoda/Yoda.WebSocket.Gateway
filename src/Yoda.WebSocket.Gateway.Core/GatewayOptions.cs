@@ -6,6 +6,8 @@ using System.Net.Http.Headers;
 using System.Net.WebSockets;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Yoda.WebSocket.Gateway.Core
 {
@@ -44,5 +46,8 @@ namespace Yoda.WebSocket.Gateway.Core
                     return null;
             }
         };
+
+        [IgnoreDataMember]
+        public Func<HttpContext, Task<bool>> AuthenticateHandler { get; set; } = async context => await Task.FromResult(true);
     }
 }

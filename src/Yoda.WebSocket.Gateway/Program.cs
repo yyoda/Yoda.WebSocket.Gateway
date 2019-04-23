@@ -45,8 +45,6 @@ namespace Yoda.WebSocket.Gateway
                 })
                 .Configure(app =>
                 {
-                    var env = app.ApplicationServices.GetService<IHostingEnvironment>();
-
                     app.UseErrorHandler();
 
                     var gatewayUrl = configuration["GATEWAY_URL"] ??
@@ -62,6 +60,8 @@ namespace Yoda.WebSocket.Gateway
 
                     app.UseRouter(router =>
                     {
+                        var env = app.ApplicationServices.GetService<IHostingEnvironment>();
+
                         var settings = new JsonSerializerSettings
                         {
                             ContractResolver = new DefaultContractResolver { NamingStrategy = new CamelCaseNamingStrategy() }
