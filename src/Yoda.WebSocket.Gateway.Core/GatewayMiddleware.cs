@@ -125,7 +125,7 @@ namespace Yoda.WebSocket.Gateway.Core
                                 request.Content = content;
 
                                 #pragma warning disable 4014
-                                ForwardMessageAsync(request, cancellationToken).ConfigureAwait(false);
+                                ForwardMessageAsync(_http, request, _logger).ConfigureAwait(false);
                                 #pragma warning restore 4014
                             }
                             else
@@ -142,21 +142,21 @@ namespace Yoda.WebSocket.Gateway.Core
 
                 } while (current.MessageType != WebSocketMessageType.Close);
 
-                async Task ForwardMessageAsync(HttpRequestMessage request, CancellationToken ct)
+                async Task ForwardMessageAsync(HttpClient http, HttpRequestMessage request, ILogger logger)
                 {
                     try
                     {
-                        var response = await _http.SendAsync(request, ct);
+                        var response = await http.SendAsync(request, CancellationToken.None);
 
                         if (!response.IsSuccessStatusCode)
                         {
                             var body = await response.Content.ReadAsStringAsync();
-                            _logger.LogError(GatewayConstant.AbortedHttpRequest, $"uri: {request.RequestUri}, status: {response.StatusCode}, body: {body}");
+                            logger.LogError(GatewayConstant.AbortedHttpRequest, $"uri: {request.RequestUri}, status: {response.StatusCode}, body: {body}");
                         }
                     }
                     catch (Exception e)
                     {
-                        _logger.LogError(GatewayConstant.AbortedHttpRequest, e, $"uri: {request.RequestUri}");
+                        logger.LogError(GatewayConstant.AbortedHttpRequest, e, $"uri: {request.RequestUri}");
                     }
                 }
 
