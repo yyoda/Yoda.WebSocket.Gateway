@@ -2,14 +2,14 @@
 
 namespace Yoda.WebSocket.Gateway.Core
 {
-    public class GatewayConnection
+    public class WebSocketReference
     {
         private readonly ConcurrentDictionary<string, System.Net.WebSockets.WebSocket> _sockets;
 
-        private GatewayConnection() =>
+        private WebSocketReference() =>
             _sockets = new ConcurrentDictionary<string, System.Net.WebSockets.WebSocket>();
 
-        public static GatewayConnection Instance { get; } = new GatewayConnection();
+        public static WebSocketReference Instance { get; } = new WebSocketReference();
 
         internal System.Net.WebSockets.WebSocket GetSocket(string connectionId) =>
             _sockets.TryGetValue(connectionId, out var socket) ? socket : null;

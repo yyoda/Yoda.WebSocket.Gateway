@@ -28,7 +28,7 @@ namespace Yoda.WebSocket.Gateway.Core
         public TimeSpan HttpHandlerLifetime { get; set; } = TimeSpan.FromMinutes(5);
 
         [IgnoreDataMember]
-        public Func<HttpRequest, WebSocketMessageType> UnicastMessageTypeSelector { get; set; } = request =>
+        public Func<HttpRequest, WebSocketMessageType> WebSocketMessageTypeSelector { get; set; } = request =>
         {
             if (request.ContentType.Contains("application/json") || request.ContentType.Contains("text/plain"))
             {
@@ -39,7 +39,7 @@ namespace Yoda.WebSocket.Gateway.Core
         };
 
         [IgnoreDataMember]
-        public Func<byte[], WebSocketMessageType, HttpContent> HttpContentGenerator { get; set; } = (data, type) =>
+        public Func<byte[], WebSocketMessageType, HttpContent> HttpContentFactory { get; set; } = (data, type) =>
         {
             switch (type)
             {

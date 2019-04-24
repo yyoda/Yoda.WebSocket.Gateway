@@ -3,26 +3,26 @@ using System.Threading;
 
 namespace Yoda.WebSocket.Gateway.Core
 {
-    public class GatewayMetrics
+    public class GatewayStatus
     {
-        public GatewayMetrics()
+        public GatewayStatus()
         {
-            Threads = new ThreadMetrics();
-            WebSocketConnectionCount = GatewayConnection.Instance.Count;
+            ThreadsPool = new ThreadPoolCounter();
+            WebSocketConnections = WebSocketReference.Instance.Count;
         }
 
         private static readonly string Started = DateTimeOffset.Now.ToString("yyyy/MM/dd hh:mm:ss");
         private static readonly int Processor = Environment.ProcessorCount;
 
         public string StartedAt => Started;
-        public int ProcessorCount => Processor;
-        public ThreadMetrics Threads { get; }
-        public int WebSocketConnectionCount { get; }
+        public int Processors => Processor;
+        public ThreadPoolCounter ThreadsPool { get; }
+        public int WebSocketConnections { get; }
         public GatewayOptions Options { get; set; }
 
-        public class ThreadMetrics
+        public class ThreadPoolCounter
         {
-            public ThreadMetrics()
+            public ThreadPoolCounter()
             {
                 ThreadPool.GetAvailableThreads(out var availableWorkerThreads, out var availableCompletionPortThreads);
                 ThreadPool.GetMaxThreads(out var maxWorkerThreads, out var maxCompletionPortThreads);

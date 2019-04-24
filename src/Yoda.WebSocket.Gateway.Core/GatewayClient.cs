@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -46,12 +47,21 @@ namespace Yoda.WebSocket.Gateway.Core
 
         private async Task RequestAsync(GatewayClientConnection connection, HttpContent content)
         {
-            var response = await Client.PostAsync($"{connection.RemoteHost}cb/{connection.Id}", content);
+            var uri = $"{connection.RemoteHost}cb/{connection.Id}";
 
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                var body = await response.Content.ReadAsStringAsync();
-                Logger.LogError(GatewayLogEvent.HttpRequestError, $"status: {response.StatusCode}, connection: {connection}, content: {body}");
+                var response = await Client.PostAsync(uri, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var body = await response.Content.ReadAsStringAsync();
+                    Logger.LogError(GatewayConstant.AbortedHttpRequest, $"uri: {uri}, status: {response.StatusCode}, connection: {connection}, content: {body}");
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(GatewayConstant.AbortedHttpRequest, e, $"uri: {uri}");
             }
         }
     }

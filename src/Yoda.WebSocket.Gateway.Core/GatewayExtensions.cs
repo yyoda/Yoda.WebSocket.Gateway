@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -15,9 +16,9 @@ namespace Yoda.WebSocket.Gateway.Core
         {
             if (services == null) throw new ArgumentNullException(nameof(services));
 
-            services.AddSingleton(service => options);
+            services.AddSingleton(options);
 
-            services.AddHttpClient("default")
+            services.AddHttpClient(GatewayConstant.DefaultHttpClientName)
                 .ConfigureHttpClient(client => client.BaseAddress = new Uri(options.ForwardUrl))
                 .ConfigurePrimaryHttpMessageHandler<SocketsHttpHandler>()
                 .SetHandlerLifetime(options.HttpHandlerLifetime);
@@ -37,23 +38,6 @@ namespace Yoda.WebSocket.Gateway.Core
             return app;
         }
 
-        private const string RemoteHostKeyName = "X-Remote-Host";
-        private const string ConnectionIdKeyName = "X-Connection-Id";
-
-        public static GatewayClientConnection GetGatewayConnection(this HttpRequest request)
-        {
-            var hasRemoteHost = request.Headers.TryGetValue(RemoteHostKeyName, out var remoteHost);
-            var hasConnectionId = request.Headers.TryGetValue(ConnectionIdKeyName, out var connectionId);
-
-            return hasRemoteHost && hasConnectionId ? new GatewayClientConnection(remoteHost, connectionId) : null;
-        }
-
-        public static void SetGatewayConnectionHeader(this HttpRequestMessage request, string remoteHost, string connectionId)
-        {
-            request.Headers.Add(RemoteHostKeyName, remoteHost);
-            request.Headers.Add(ConnectionIdKeyName, connectionId);
-        }
-
         public static IApplicationBuilder UseErrorHandler(this IApplicationBuilder app)
         {
             var loggerFactory = app.ApplicationServices.GetService<ILoggerFactory>() ?? new NullLoggerFactory();
@@ -61,16 +45,16 @@ namespace Yoda.WebSocket.Gateway.Core
 
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
-                logger.LogError(GatewayLogEvent.UnhandledError, $"IsTerminating: {args.IsTerminating}");
+                logger.LogError(GatewayConstant.OccurredUnhandledException, $"IsTerminating: {args.IsTerminating}");
                 var id = AppDomain.CurrentDomain.Id;
 
                 if (args.ExceptionObject is Exception e)
                 {
-                    logger.LogError(GatewayLogEvent.UnhandledError, e, $"IsTerminating: {args.IsTerminating}, Id: {id}");
+                    logger.LogError(GatewayConstant.OccurredUnhandledException, e, $"IsTerminating: {args.IsTerminating}, Id: {id}");
                 }
                 else
                 {
-                    logger.LogError(GatewayLogEvent.UnhandledError, $"IsTerminating: {args.IsTerminating}, Id: {id}");
+                    logger.LogError(GatewayConstant.OccurredUnhandledException, $"IsTerminating: {args.IsTerminating}, Id: {id}");
                 }
             };
 
@@ -80,12 +64,38 @@ namespace Yoda.WebSocket.Gateway.Core
 
                 args.Exception.Handle(e =>
                 {
-                    logger.LogError(GatewayLogEvent.UnobservedTaskError, e, "Unobserved error in TaskScheduler");
+                    logger.LogError(GatewayConstant.OccurredUnobservedTaskException, e, "Unobserved error in TaskScheduler");
                     return true;
                 });
             };
 
             return app;
+        }
+
+        public static GatewayClientConnection GetGatewayConnection(this HttpRequest request)
+        {
+            var hasRemoteHost = request.Headers.TryGetValue(GatewayConstant.RemoteHostKeyName, out var remoteHost);
+            var hasConnectionId = request.Headers.TryGetValue(GatewayConstant.ConnectionIdKeyName, out var connectionId);
+
+            return hasRemoteHost && hasConnectionId ? new GatewayClientConnection(remoteHost, connectionId) : null;
+        }
+
+        internal static async Task AsUnauthorized(this HttpResponse response, string message = "Access Dnied", CancellationToken? cancellationToken = null)
+        {
+            response.StatusCode = 401;
+            await response.WriteAsync(message, cancellationToken ?? CancellationToken.None);
+        }
+
+        internal static async Task AsBadRequest(this HttpResponse response, string message = "Bad Request", CancellationToken? cancellationToken = null)
+        {
+            response.StatusCode = 400;
+            await response.WriteAsync(message, cancellationToken ?? CancellationToken.None);
+        }
+
+        internal static async Task AsGone(this HttpResponse response, string message = "Gone", CancellationToken? cancellationToken = null)
+        {
+            response.StatusCode = 410;
+            await response.WriteAsync(message, cancellationToken ?? CancellationToken.None);
         }
     }
 }

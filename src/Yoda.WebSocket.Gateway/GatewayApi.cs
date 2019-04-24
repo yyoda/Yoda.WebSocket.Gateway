@@ -49,7 +49,7 @@ namespace Yoda.WebSocket.Gateway
 
             return router.MapGet("/status", context => Hide(context, env, async () =>
             {
-                await context.Response.WriteJsonAsync(new GatewayMetrics {Options = opt});
+                await context.Response.WriteJsonAsync(new GatewayStatus {Options = opt});
             }));
         }
 

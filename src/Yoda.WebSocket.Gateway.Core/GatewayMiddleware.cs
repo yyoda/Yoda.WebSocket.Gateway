@@ -23,7 +23,7 @@ namespace Yoda.WebSocket.Gateway.Core
         {
             _next = next ?? throw new ArgumentNullException(nameof(next));
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            _http = httpClientFactory?.CreateClient("default") ?? new HttpClient();
+            _http = httpClientFactory?.CreateClient(GatewayConstant.DefaultHttpClientName) ?? new HttpClient(new SocketsHttpHandler());
             _logger = loggerFactory?.CreateLogger(nameof(GatewayMiddleware)) ?? NullLogger.Instance;
         }
 
@@ -39,8 +39,7 @@ namespace Yoda.WebSocket.Gateway.Core
                 {
                     if (!await _options.AuthenticateHandler(context))
                     {
-                        context.Response.StatusCode = 401;
-                        await context.Response.WriteAsync("Accedd Denied.", cancellation.Token);
+                        await context.Response.AsUnauthorized(cancellationToken: cancellation.Token);
                         return;
                     }
 
@@ -48,16 +47,14 @@ namespace Yoda.WebSocket.Gateway.Core
                 }
                 else
                 {
-                    context.Response.StatusCode = 400;
-                    await context.Response.WriteAsync("Invalid WebSocket protocol.", cancellation.Token);
+                    await context.Response.AsBadRequest("Invalid WebSocket Protocol", cancellation.Token);
                 }
             }
             else if (context.Request.Path.StartsWithSegments(_options.CallbackEndpoint))
             {
                 if (!await _options.AuthenticateHandler(context))
                 {
-                    context.Response.StatusCode = 401;
-                    await context.Response.WriteAsync("Accedd Denied.", cancellation.Token);
+                    await context.Response.AsUnauthorized(cancellationToken: cancellation.Token);
                     return;
                 }
 
@@ -80,14 +77,13 @@ namespace Yoda.WebSocket.Gateway.Core
             }
             catch (Exception e)
             {
-                const string errorMessage = "Websocket handshake error.";
-                _logger.LogDebug(GatewayLogEvent.WebSocketHandshakeError, e, errorMessage);
-                context.Response.StatusCode = 400;
-                await context.Response.WriteAsync(errorMessage, cancellationToken);
+                var message = $"Failed Websocket Handshake. id: {connectionId}";
+                await context.Response.AsBadRequest(message, cancellationToken);
+                _logger.LogDebug(GatewayConstant.FailedWebSocketHandshake, e, message);
                 return;
             }
 
-            GatewayConnection.Instance.SetSocket(connectionId, socket);
+            WebSocketReference.Instance.SetSocket(connectionId, socket);
 
             try
             {
@@ -107,10 +103,9 @@ namespace Yoda.WebSocket.Gateway.Core
                         }
                         catch (WebSocketException e)
                         {
-                            const string errorMessage = "Connection has been disabled.";
-                            _logger.LogDebug(GatewayLogEvent.WebSocketConnectionError, e, errorMessage);
-                            context.Response.StatusCode = 400;
-                            await context.Response.WriteAsync(errorMessage, cancellationToken);
+                            var message = $"Aborted Connection. id: {connectionId}";
+                            await context.Response.AsBadRequest(message, cancellationToken);
+                            _logger.LogDebug(GatewayConstant.AbortedWebSocketConnection, e, message);
                             return;
                         }
 
@@ -119,13 +114,14 @@ namespace Yoda.WebSocket.Gateway.Core
 
                         if (current.EndOfMessage)
                         {
-                            var content = _options.HttpContentGenerator(messageBuffer.ToArray(), current.MessageType);
+                            var content = _options.HttpContentFactory(messageBuffer.ToArray(), current.MessageType);
                             if (content != null)
                             {
                                 var requestUri = current.MessageType.ToString().ToLower();
                                 var remoteHost = _options.GatewayUrl;
                                 var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
-                                request.SetGatewayConnectionHeader(remoteHost, connectionId);
+                                request.Headers.Add(GatewayConstant.RemoteHostKeyName, remoteHost);
+                                request.Headers.Add(GatewayConstant.ConnectionIdKeyName, connectionId);
                                 request.Content = content;
 
                                 #pragma warning disable 4014
@@ -134,7 +130,7 @@ namespace Yoda.WebSocket.Gateway.Core
                             }
                             else
                             {
-                                _logger.LogDebug(GatewayLogEvent.InvalidWebSocketMessageType, $"type: {current.MessageType}");
+                                _logger.LogDebug(GatewayConstant.InvalidWebSocketMessageType, $"type: {current.MessageType}");
                             }
                         }
                     }
@@ -148,20 +144,36 @@ namespace Yoda.WebSocket.Gateway.Core
 
                 async Task ForwardMessageAsync(HttpRequestMessage request, CancellationToken ct)
                 {
-                    var response = await _http.SendAsync(request, ct);
-
-                    if (!response.IsSuccessStatusCode)
+                    try
                     {
-                        var body = await response.Content.ReadAsStringAsync();
-                        _logger.LogError(GatewayLogEvent.HttpRequestError, $"uri: {request.RequestUri}, status: {response.StatusCode}, body: {body}");
+                        var response = await _http.SendAsync(request, ct);
+
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            var body = await response.Content.ReadAsStringAsync();
+                            _logger.LogError(GatewayConstant.AbortedHttpRequest, $"uri: {request.RequestUri}, status: {response.StatusCode}, body: {body}");
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogError(GatewayConstant.AbortedHttpRequest, e, $"uri: {request.RequestUri}");
                     }
                 }
 
-                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Successfully WebSocket Connection was closed.", cancellationToken);
+                try
+                {
+                    await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed WebSocket Connection.", cancellationToken);
+                }
+                catch (WebSocketException e)
+                {
+                    var message = $"Failed close WebSocket Connection. id: {connectionId}";
+                    await context.Response.AsBadRequest(message, cancellationToken);
+                    _logger.LogDebug(GatewayConstant.AbortedWebSocketConnection, e, message);
+                }
             }
             finally
             {
-                GatewayConnection.Instance.RemoveSocket(connectionId);
+                WebSocketReference.Instance.RemoveSocket(connectionId);
             }
         }
 
@@ -170,25 +182,21 @@ namespace Yoda.WebSocket.Gateway.Core
             var connectionId = context.Request.Path.Value.Replace($"{_options.CallbackEndpoint}/", "");
             if (string.IsNullOrWhiteSpace(connectionId))
             {
-                context.Response.StatusCode = 400;
-                await context.Response.WriteAsync("Id does not exist.", cancellationToken);
+                await context.Response.AsBadRequest("Missing ConnectionId", cancellationToken);
                 return;
             }
 
-            var socket = GatewayConnection.Instance.GetSocket(connectionId);
+            var socket = WebSocketReference.Instance.GetSocket(connectionId);
             if (socket == null)
             {
-                context.Response.StatusCode = 410;
-                await context.Response.WriteAsync("Connection was gone.", cancellationToken);
+                await context.Response.AsGone(cancellationToken: cancellationToken);
                 return;
             }
 
             var length64 = context.Request.ContentLength ?? context.Request.Body.Length;
-
             if (length64 > int.MaxValue)
             {
-                context.Response.StatusCode = 400;
-                await context.Response.WriteAsync("Too large Content-Length.", cancellationToken);
+                await context.Response.AsBadRequest("Too large Content-Length", cancellationToken);
                 return;
             }
 
@@ -196,48 +204,45 @@ namespace Yoda.WebSocket.Gateway.Core
             var allocatedBuffer = ArrayPool<byte>.Shared.Rent(length32);
             var readBuffer = allocatedBuffer.AsMemory().Slice(0, length32);
 
+            await context.Request.Body.ReadAsync(readBuffer, cancellationToken);
+            var type = _options.WebSocketMessageTypeSelector(context.Request);
+
             try
             {
-                await context.Request.Body.ReadAsync(readBuffer, cancellationToken);
-                var type = _options.UnicastMessageTypeSelector(context.Request);
-
-                try
+                // 送信データが指定サイズを超過している場合は分割して複数に分けて送信
+                if (length64 < _options.ReceiveBufferSize)
                 {
-                    // 送信データが指定サイズを超過している場合は分割して複数に分けて送信
-                    if (length64 < _options.ReceiveBufferSize)
-                    {
-                        var chunk = readBuffer.Slice(0, length32);
-                        await socket.SendAsync(chunk, type, true, cancellationToken);
-                    }
-                    else
-                    {
-                        var chunkSize = _options.ReceiveBufferSize;
-                        var chunkIndex = 0;
+                    var chunk = readBuffer.Slice(0, length32);
+                    await socket.SendAsync(chunk, type, true, cancellationToken);
+                }
+                else
+                {
+                    var chunkSize = _options.ReceiveBufferSize;
+                    var chunkIndex = 0;
 
-                        while (true)
+                    while (true)
+                    {
+                        if (chunkIndex + chunkSize <= readBuffer.Length)
                         {
-                            if (chunkIndex + chunkSize <= readBuffer.Length)
-                            {
-                                var chunk = readBuffer.Slice(chunkIndex, chunkSize);
-                                chunkIndex += chunkSize;
-                                await socket.SendAsync(chunk, type, false, cancellationToken);
-                            }
-                            else
-                            {
-                                var finalSize = readBuffer.Length - chunkIndex;
-                                var chunk = readBuffer.Slice(chunkIndex, finalSize);
-                                await socket.SendAsync(chunk, type, true, cancellationToken);
-                                break;
-                            }
+                            var chunk = readBuffer.Slice(chunkIndex, chunkSize);
+                            chunkIndex += chunkSize;
+                            await socket.SendAsync(chunk, type, false, cancellationToken);
+                        }
+                        else
+                        {
+                            var finalSize = readBuffer.Length - chunkIndex;
+                            var chunk = readBuffer.Slice(chunkIndex, finalSize);
+                            await socket.SendAsync(chunk, type, true, cancellationToken);
+                            break;
                         }
                     }
                 }
-                catch (Exception e)
-                {
-                    GatewayConnection.Instance.RemoveSocket(connectionId);
-                    context.Response.StatusCode = 410;
-                    await context.Response.WriteAsync($"Connection was gone. id: {connectionId}, exeption: {e}, state: {socket.State}", cancellationToken);
-                }
+            }
+            catch (WebSocketException e)
+            {
+                WebSocketReference.Instance.RemoveSocket(connectionId);
+                await context.Response.AsGone(cancellationToken: cancellationToken);
+                _logger.LogDebug(GatewayConstant.AbortedWebSocketConnection, e, $"WebSocket Connection was Gone. id: {connectionId}, state: {socket.State}");
             }
             finally
             {
