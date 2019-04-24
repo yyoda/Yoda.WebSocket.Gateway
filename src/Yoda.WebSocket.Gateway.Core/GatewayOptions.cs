@@ -6,18 +6,26 @@ using System.Net.Http.Headers;
 using System.Net.WebSockets;
 using System.Runtime.Serialization;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Yoda.WebSocket.Gateway.Core
 {
     public class GatewayOptions : WebSocketOptions
     {
-        public GatewayOptions(string gatewayUrl) => GatewayUrl = gatewayUrl;
+        public GatewayOptions(string gatewayUrl, string forwardUrl)
+        {
+            if (string.IsNullOrWhiteSpace(gatewayUrl)) throw new ArgumentNullException(nameof(gatewayUrl));
+            if (string.IsNullOrWhiteSpace(forwardUrl)) throw new ArgumentNullException(nameof(forwardUrl));
+
+            GatewayUrl = gatewayUrl;
+            ForwardUrl = forwardUrl;
+        }
 
         public string WebSocketEndpoint { get; set; } = "/ws";
         public string CallbackEndpoint { get; set; } = "/cb";
         public string GatewayUrl { get; }
+        public string ForwardUrl { get; }
+        public TimeSpan HttpHandlerLifetime { get; set; } = TimeSpan.FromMinutes(5);
 
         [IgnoreDataMember]
         public Func<HttpRequest, WebSocketMessageType> UnicastMessageTypeSelector { get; set; } = request =>
