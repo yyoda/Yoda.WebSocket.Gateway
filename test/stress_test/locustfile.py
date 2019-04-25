@@ -14,7 +14,7 @@ import six
 from locust import HttpLocust, TaskSet, task
 from locust.events import request_success
 
-ENDPOINT = 'ws://localhost:5000/ws/'
+ENDPOINT = 'ws://localhost:5010/ws/'
 
 class WebSocketTaskSet(TaskSet):
     def on_start(self):
