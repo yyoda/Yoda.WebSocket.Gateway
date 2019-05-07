@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using System;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
@@ -54,8 +55,5 @@ namespace Yoda.WebSocket.Gateway.Core
                     return null;
             }
         };
-
-        [IgnoreDataMember]
-        public Func<HttpContext, Task<bool>> AuthenticateHandler { get; set; } = async context => await Task.FromResult(true);
     }
 }

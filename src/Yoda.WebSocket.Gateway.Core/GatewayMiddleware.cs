@@ -37,12 +37,6 @@ namespace Yoda.WebSocket.Gateway.Core
             {
                 if (context.WebSockets.IsWebSocketRequest)
                 {
-                    if (!await _options.AuthenticateHandler(context))
-                    {
-                        await context.Response.AsUnauthorized(cancellationToken: cancellation.Token);
-                        return;
-                    }
-
                     await HandleWebSocketRequestAsync(context, cancellation.Token);
                 }
                 else
@@ -52,12 +46,6 @@ namespace Yoda.WebSocket.Gateway.Core
             }
             else if (context.Request.Path.StartsWithSegments(_options.CallbackEndpoint))
             {
-                if (!await _options.AuthenticateHandler(context))
-                {
-                    await context.Response.AsUnauthorized(cancellationToken: cancellation.Token);
-                    return;
-                }
-
                 await HandleCallbackRequestAsync(context, cancellation.Token);
             }
             else

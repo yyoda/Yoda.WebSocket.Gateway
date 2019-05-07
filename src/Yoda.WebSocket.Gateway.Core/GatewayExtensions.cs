@@ -80,7 +80,7 @@ namespace Yoda.WebSocket.Gateway.Core
             return hasRemoteHost && hasConnectionId ? new GatewayClientConnection(remoteHost, connectionId) : null;
         }
 
-        internal static async Task AsUnauthorized(this HttpResponse response, string message = "Access Dnied", CancellationToken? cancellationToken = null)
+        internal static async Task AsUnauthorized(this HttpResponse response, string message = "Unauthorized", CancellationToken? cancellationToken = null)
         {
             response.StatusCode = 401;
             await response.WriteAsync(message, cancellationToken ?? CancellationToken.None);
