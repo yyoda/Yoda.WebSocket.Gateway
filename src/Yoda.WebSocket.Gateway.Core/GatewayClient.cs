@@ -28,9 +28,9 @@ namespace Yoda.WebSocket.Gateway.Core
             var content = new StringContent(message);
             content.Headers.ContentType = MediaTypeHeaderValue.Parse("text/plain");
 
-            foreach (var connectionId in connections)
+            foreach (var connection in connections)
             {
-                RequestAsync(connectionId, content).ConfigureAwait(false);
+                RequestAsync(connection, content).ConfigureAwait(false);
             }
         }
 
@@ -39,9 +39,9 @@ namespace Yoda.WebSocket.Gateway.Core
             var content = new ByteArrayContent(message);
             content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
 
-            foreach (var connectionId in connections)
+            foreach (var connection in connections)
             {
-                RequestAsync(connectionId, content).ConfigureAwait(false);
+                RequestAsync(connection, content).ConfigureAwait(false);
             }
         }
 
@@ -77,6 +77,6 @@ namespace Yoda.WebSocket.Gateway.Core
         public string RemoteHost { get; }
         public string Id { get; }
 
-        public override string ToString() => $"remoteHost: {RemoteHost}, id: {Id}";
+        public override string ToString() => $"connection: {{ remoteHost: {RemoteHost}, id: {Id} }}";
     }
 }
