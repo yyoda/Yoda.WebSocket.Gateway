@@ -23,7 +23,7 @@ namespace Yoda.WebSocket.Gateway
                 .UseConfiguration(configuration)
                 .ConfigureServices((context, services) =>
                 {
-                    var gatewayUrl = context.Configuration["GATEWAY_URL"];
+                    var gatewayUrl = AwsUtility.GetContainerHostUrlAsync(context.Configuration).Result;
                     var forwardUrl = context.Configuration["FORWARD_URL"];
 
                     services.AddWebSocketGateway(new GatewayOptions(gatewayUrl, forwardUrl)
