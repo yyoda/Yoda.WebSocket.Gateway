@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -20,7 +21,10 @@ namespace Yoda.WebSocket.Gateway.Core
 
             services.AddHttpClient(GatewayConstant.DefaultHttpClientName)
                 .ConfigureHttpClient(client => client.BaseAddress = new Uri(options.ForwardUrl))
-                .ConfigurePrimaryHttpMessageHandler<SocketsHttpHandler>()
+                .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+                {
+                    MaxConnectionsPerServer = 100,
+                })
                 .SetHandlerLifetime(options.HttpHandlerLifetime);
 
             return services;

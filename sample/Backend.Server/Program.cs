@@ -25,7 +25,10 @@ namespace Backend.Server
                 .ConfigureServices(services =>
                 {
                     services.AddHttpClient<IGatewayClient, GatewayClient>()
-                        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler())
+                        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+                        {
+                            MaxConnectionsPerServer = 100,
+                        })
                         .SetHandlerLifetime(TimeSpan.FromMinutes(5));
 
                     services.AddMvc(options =>
