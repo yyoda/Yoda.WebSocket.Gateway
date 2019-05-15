@@ -1,7 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Linq;
 using Yoda.WebSocket.Gateway.Core;
 
 namespace Backend.Server.Controllers
@@ -11,26 +9,37 @@ namespace Backend.Server.Controllers
     public class MessageController : ControllerBase
     {
         private readonly IGatewayClient _client;
-        private static readonly IDictionary<string, GatewayClientConnection> Connections = new ConcurrentDictionary<string, GatewayClientConnection>();
+        private readonly IRepository _repository;
+        private const int GroupSize = 5;
 
-        public MessageController(IGatewayClient client) => _client = client;
+        public MessageController(IGatewayClient client, IRepository repository)
+        {
+            _client = client;
+            _repository = repository;
+        }
 
         [HttpPost("text")]
-        public IActionResult BroadcastText([FromBody] string message)
+        public async Task BroadcastText([FromBody] string message)
         {
-            var connection = base.Request.GetGatewayConnection();
-            Connections[connection.Id] = connection;
-            _client.BroadcastMessage(Connections.Values.ToArray(), message);
-            return Ok();
+            var connection = Request.GetGatewayConnection();
+            var connectionId = int.Parse(connection.Id);
+            var groupId = connectionId / GroupSize;
+            await _repository.SetConnectionAsync(groupId.ToString(), connection);
+            var connections = await _repository.GetConnectionAsync(groupId.ToString());
+
+            _client.BroadcastMessage(connections, message);
         }
 
         [HttpPost("binary")]
-        public IActionResult BroadcastBinary([FromBody] byte[] message)
+        public async Task BroadcastBinary([FromBody] byte[] message)
         {
-            var connection = base.Request.GetGatewayConnection();
-            Connections[connection.Id] = connection;
-            _client.BroadcastMessage(Connections.Values.ToArray(), message);
-            return Ok();
+            var connection = Request.GetGatewayConnection();
+            var connectionId = int.Parse(connection.Id);
+            var groupId = connectionId / GroupSize;
+            await _repository.SetConnectionAsync(groupId.ToString(), connection);
+            var connections = await _repository.GetConnectionAsync(groupId.ToString());
+
+            _client.BroadcastMessage(connections, message);
         }
     }
 }

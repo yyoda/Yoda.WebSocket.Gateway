@@ -19,8 +19,14 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://*:5120/
+      - REDIS=host.docker.internal:5130
     ports:
       - "5120:5120"
     build:
       context: .
       dockerfile: sample/Backend.Server/Dockerfile
+
+  redis:
+    image: redis:latest
+    ports:
+      - "5130:6379"

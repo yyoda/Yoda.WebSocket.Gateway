@@ -22,8 +22,10 @@ namespace Backend.Server
 
             WebHost.CreateDefaultBuilder(args)
                 .UseConfiguration(configuration)
-                .ConfigureServices(services =>
+                .ConfigureServices((context, services) =>
                 {
+                    services.AddSingleton<IRepository>(_ => new Repository(context.Configuration["REDIS"]));
+
                     services.AddHttpClient<IGatewayClient, GatewayClient>()
                         .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
                         {
@@ -37,7 +39,7 @@ namespace Backend.Server
                         options.InputFormatters.Insert(1, new BinaryInputFormatter());
                     });
                 })
-                .Configure(app => { app.UseMvc(); })
+                .Configure(app => app.UseMvc())
                 .Build()
                 .Run();
         }
