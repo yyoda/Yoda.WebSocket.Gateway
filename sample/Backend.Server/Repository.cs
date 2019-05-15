@@ -17,6 +17,7 @@ namespace Backend.Server
     {
         private readonly IDatabase _db;
         private readonly TimeSpan _expiry = TimeSpan.FromMinutes(1);
+        private const string KeyPrefix = "WebSocket.Gateway.Connection";
 
         public Repository(string connectionString, int db = -1)
         {
@@ -27,13 +28,13 @@ namespace Backend.Server
         public async Task SetConnectionAsync(string groupId, GatewayClientConnection connection)
         {
             var value = JsonConvert.SerializeObject(connection);
-            await _db.SetAddAsync(groupId, value);
-            await _db.KeyExpireAsync(groupId, _expiry, CommandFlags.FireAndForget);
+            await _db.SetAddAsync($"{KeyPrefix}:{groupId}", value);
+            await _db.KeyExpireAsync($"{KeyPrefix}:{groupId}", _expiry, CommandFlags.FireAndForget);
         }
 
         public async Task<GatewayClientConnection[]> GetConnectionAsync(string groupId)
         {
-            var redisValues = await _db.SetMembersAsync(groupId) ?? new RedisValue[0];
+            var redisValues = await _db.SetMembersAsync($"{KeyPrefix}:{groupId}") ?? new RedisValue[0];
             var stringValues = redisValues.Select(value => value.ToString()).ToArray();
 
             if (!stringValues.Any())
