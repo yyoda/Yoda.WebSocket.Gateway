@@ -39,7 +39,7 @@
         document.addEventListener('DOMContentLoaded', e => {
             document.getElementById('connect').addEventListener('click', e => {
                 var id = document.getElementById('connectionId').value;
-                sock = new WebSocket('ws://localhost:5010/ws/' + id);
+                sock = new WebSocket('ws://localhost:5110/ws/' + id);
                 sock.binaryType = "arraybuffer";
                 sock.addEventListener('open', e => {
                     document.getElementById('status').innerText = "Connected.";
