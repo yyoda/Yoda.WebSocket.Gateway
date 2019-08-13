@@ -1,0 +1,11 @@
+{
+	"dockerComposeFile": [
+		"docker-compose.yml"
+	],
+	"service": "locust",
+	"workspaceFolder": "/workspace",
+	"shutdownAction": "stopCompose",
+	"extensions": [
+		"ms-python.python"
+	]
+}

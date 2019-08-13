@@ -30,3 +30,4 @@ bld/
 
 # Python
 __pycache__/
+pip-delete-this-directory.txt
