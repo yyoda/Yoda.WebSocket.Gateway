@@ -86,20 +86,29 @@ namespace Yoda.WebSocket.Gateway.Core
 
         internal static async Task AsUnauthorized(this HttpResponse response, string message = "Unauthorized", CancellationToken? cancellationToken = null)
         {
-            response.StatusCode = 401;
-            await response.WriteAsync(message, cancellationToken ?? CancellationToken.None);
+            if (!response.HasStarted)
+            {
+                response.StatusCode = 401;
+                await response.WriteAsync(message, cancellationToken ?? CancellationToken.None);
+            }
         }
 
         internal static async Task AsBadRequest(this HttpResponse response, string message = "Bad Request", CancellationToken? cancellationToken = null)
         {
-            response.StatusCode = 400;
-            await response.WriteAsync(message, cancellationToken ?? CancellationToken.None);
+            if (!response.HasStarted)
+            {
+                response.StatusCode = 400;
+                await response.WriteAsync(message, cancellationToken ?? CancellationToken.None);
+            }
         }
 
         internal static async Task AsGone(this HttpResponse response, string message = "Gone", CancellationToken? cancellationToken = null)
         {
-            response.StatusCode = 410;
-            await response.WriteAsync(message, cancellationToken ?? CancellationToken.None);
+            if (!response.HasStarted)
+            {
+                response.StatusCode = 410;
+                await response.WriteAsync(message, cancellationToken ?? CancellationToken.None);
+            }
         }
     }
 }

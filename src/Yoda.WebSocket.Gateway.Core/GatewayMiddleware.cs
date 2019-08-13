@@ -41,7 +41,7 @@ namespace Yoda.WebSocket.Gateway.Core
                 }
                 else
                 {
-                    await context.Response.AsBadRequest("Invalid WebSocket Protocol", cancellation.Token);
+                    await context.Response.AsBadRequest("Not WebSocket protocol.", cancellation.Token);
                 }
             }
             else if (context.Request.Path.StartsWithSegments(_options.CallbackEndpoint))
